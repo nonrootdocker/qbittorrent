@@ -45,16 +45,15 @@
       version = "latest";
       src = bazarr-src;
 
-      nativeBuildInputs = [ pkgs.unzip ];
       buildInputs = [ bazarrPython ];
 
-      unpackPhase = ''
-        unzip $src
-      '';
+      # Skip unpacking because Nix automatically extracts the zip archive when fetching
+      dontUnpack = true;
 
+      # Copy the pre-extracted files directly from the Nix store source
       installPhase = ''
         mkdir -p $out/app/bazarr
-        cp -r . $out/app/bazarr
+        cp -r $src/. $out/app/bazarr/
       '';
     };
 
