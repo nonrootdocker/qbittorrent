@@ -17,7 +17,7 @@
       flake = false;
     };
   };
-  outputs = { self, nixpkgs, minimalbase, libtorrent-src, qbittorrent-src }:
+  outputs = { self, nixpkgs, minimalbase, libtorrent-src, try-signal-src, qbittorrent-src }:
   let
     system = "x86_64-linux";
     pkgs = import nixpkgs {
