@@ -8,6 +8,10 @@
       flake = false;
       submodules = true;
     };
+    try-signal-src = {
+      url = "github:arvidn/try_signal";
+      flake = false;
+    };
     qbittorrent-src = {
       url = "github:qbittorrent/qBittorrent";
       flake = false;
@@ -28,6 +32,10 @@
       pname = "libtorrent-rasterbar";
       version = "latest";
       src = libtorrent-src;
+      postUnpack = ''
+        rmdir $sourceRoot/deps/try_signal
+        ln -s ${try-signal-src} $sourceRoot/deps/try_signal
+      '';
       nativeBuildInputs = with pkgs; [
         cmake
         ninja
