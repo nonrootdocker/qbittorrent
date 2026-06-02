@@ -1,18 +1,5 @@
 {
   "nodes": {
-    "jackett-src": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1780268406,
-        "narHash": "sha256-UN2rlFMht7T60srjx8KPB3zy3Qc1HxGUsQv/fzLhIVs=",
-        "type": "tarball",
-        "url": "https://github.com/Jackett/Jackett/releases/latest/download/Jackett.Binaries.LinuxAMDx64.tar.gz"
-      },
-      "original": {
-        "type": "tarball",
-        "url": "https://github.com/Jackett/Jackett/releases/latest/download/Jackett.Binaries.LinuxAMDx64.tar.gz"
-      }
-    },
     "minimalbase": {
       "inputs": {
         "nixpkgs": "nixpkgs"
@@ -48,12 +35,28 @@
     },
     "root": {
       "inputs": {
-        "jackett-src": "jackett-src",
         "minimalbase": "minimalbase",
         "nixpkgs": [
           "minimalbase",
           "nixpkgs"
-        ]
+        ],
+        "unpackerr-src": "unpackerr-src"
+      }
+    },
+    "unpackerr-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1776101506,
+        "narHash": "sha256-nH4ZSBGv4/Ey4H+Lk0hWBeztSplU62DsGIiY135Rp3E=",
+        "owner": "unpackerr",
+        "repo": "unpackerr",
+        "rev": "d6fdf16efdfc29fd22543ba74c8aad6f2d06ee59",
+        "type": "github"
+      },
+      "original": {
+        "owner": "unpackerr",
+        "repo": "unpackerr",
+        "type": "github"
       }
     }
   },
