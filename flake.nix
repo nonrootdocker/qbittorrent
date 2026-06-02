@@ -72,4 +72,34 @@
   in {
     packages.${system} = {
       default = self.packages.${system}.qbittorrent-image;
-      qb
+      qbittorrent-image = pkgs.dockerTools.buildImage {
+        name = "minimalbase-qbittorrent";
+        tag = "latest";
+        fromImage = minimalbase.packages.${system}.base-image;
+        copyToRoot = pkgs.buildEnv {
+          name = "root";
+          paths = [
+            pkgs.coreutils
+            pkgs.tzdata
+            pkgs.cacert
+            pkgs.openssl
+            pkgs.qt6.qtbase
+            pkgs.libtorrent-rasterbar-2_0_x
+            qbittorrent
+            qbittorrentAbi
+            passwdFile
+          ];
+        };
+        config = {
+          Entrypoint = [ "${minimalbase.packages.${system}.container-init}/bin/container-init" ];
+          User = "1000:1000";
+          Env = [
+            "PATH=/bin"
+            "TZ=UTC"
+            "LANG=en_US.UTF-8"
+          ];
+        };
+      };
+    };
+  };
+}
