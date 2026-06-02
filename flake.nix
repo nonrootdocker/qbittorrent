@@ -23,7 +23,7 @@
       pname = "unpackerr";
       version = "1.0.4";
       src = unpackerr-src;
-      vendorHash = pkgs.lib.fakeHash;
+      vendorHash = "sha256-T1/QeT+JbS5qjEIMj/iaalPrcq25dv9spIOJlmhehgw=";
     };
 
     # ----------------------------
