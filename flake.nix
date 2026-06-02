@@ -1,14 +1,18 @@
 {
-  description = "minimalbase-ng + unpackerr service";
+  description = "minimalbase-ng + qbittorrent service";
   inputs = {
     nixpkgs.follows = "minimalbase/nixpkgs";
     minimalbase.url = "github:nonrootdocker/minimalbase-ng";
-    unpackerr-src = {
-      url = "github:unpackerr/unpackerr";
+    libtorrent-src = {
+      url = "github:arvidn/libtorrent";
+      flake = false;
+    };
+    qbittorrent-src = {
+      url = "github:qbittorrent/qBittorrent";
       flake = false;
     };
   };
-  outputs = { self, nixpkgs, minimalbase, unpackerr-src }:
+  outputs = { self, nixpkgs, minimalbase, libtorrent-src, qbittorrent-src }:
   let
     system = "x86_64-linux";
     pkgs = import nixpkgs {
@@ -17,33 +21,75 @@
     };
 
     # ----------------------------
-    # Unpackerr package
+    # Libtorrent
     # ----------------------------
-    unpackerr = pkgs.buildGoModule {
-      pname = "unpackerr";
-      version = "1.0.4";
-      src = unpackerr-src;
-      vendorHash = "sha256-T1/QeT+JbS5qjEIMj/iaalPrcq25dv9spIOJlmhehgw=";
+    libtorrent = pkgs.stdenv.mkDerivation {
+      pname = "libtorrent-rasterbar";
+      version = "latest";
+      src = libtorrent-src;
+      nativeBuildInputs = with pkgs; [
+        cmake
+        ninja
+        pkg-config
+      ];
+      buildInputs = with pkgs; [
+        boost.dev
+        openssl
+        zlib
+      ];
+      cmakeFlags = [
+        "-DCMAKE_BUILD_TYPE=Release"
+        "-DCMAKE_CXX_STANDARD=20"
+        "-DCMAKE_INSTALL_LIBDIR=lib"
+      ];
     };
 
     # ----------------------------
-    # User database configuration (/etc/passwd)
+    # qBittorrent (headless / nox)
+    # ----------------------------
+    qbittorrent = pkgs.stdenv.mkDerivation {
+      pname = "qbittorrent-nox";
+      version = "latest";
+      src = qbittorrent-src;
+      nativeBuildInputs = with pkgs; [
+        cmake
+        ninja
+        pkg-config
+        qt6.qttools 
+      ];
+      buildInputs = with pkgs; [
+        boost.dev
+        openssl
+        qt6.qtbase
+        icu
+        zlib
+        libtorrent
+      ];
+      cmakeFlags = [
+        "-DCMAKE_BUILD_TYPE=Release"
+        "-DCMAKE_CXX_STANDARD=20"
+        "-DGUI=OFF"
+      ];
+    };
+
+    # ----------------------------
+    # User database (/etc/passwd)
     # ----------------------------
     passwdFile = pkgs.writeTextDir "etc/passwd" ''
       root:x:0:0:root:/root:/bin/sh
-      unpackerr:x:1000:1000:unpackerr:/data:/bin/sh
+      qbittorrent:x:1000:1000:qbittorrent:/data:/bin/sh
     '';
 
     # ----------------------------
     # ABI descriptor for container-init
     # ----------------------------
-    unpackerrAbi = pkgs.writeTextFile {
-      name = "unpackerr-abi.json";
+    qbittorrentAbi = pkgs.writeTextFile {
+      name = "qbittorrent-abi.json";
       text = builtins.toJSON {
         version = 2;
         process = {
-          exec = "${unpackerr}/bin/unpackerr";
-          args = [ "-c" "/data/unpackerr.conf" ];
+          exec = "${qbittorrent}/bin/qbittorrent-nox";
+          args = [ "--profile=/data" ];
         };
       };
       destination = "/app/main";
@@ -51,9 +97,9 @@
 
   in {
     packages.${system} = {
-      default = self.packages.${system}.unpackerr-image;
-      unpackerr-image = pkgs.dockerTools.buildImage {
-        name = "minimalbase-ng";
+      default = self.packages.${system}.qbittorrent-image;
+      qbittorrent-image = pkgs.dockerTools.buildImage {
+        name = "minimalbase-qbittorrent";
         tag = "latest";
         fromImage = minimalbase.packages.${system}.base-image;
         copyToRoot = pkgs.buildEnv {
@@ -62,8 +108,11 @@
             pkgs.coreutils
             pkgs.tzdata
             pkgs.cacert
-            unpackerr
-            unpackerrAbi
+            pkgs.openssl
+            pkgs.qt6.qtbase
+            libtorrent
+            qbittorrent
+            qbittorrentAbi
             passwdFile
           ];
         };
