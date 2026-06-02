@@ -1,0 +1,61 @@
+name: Build Version Specific OCI Image
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version tag (e.g. 1.0.0)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Build
+        run: nix build -L
+
+      - name: Flake check
+        run: nix flake check -L
+
+      - name: Log in to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get image name from Docker
+        if: github.event_name != 'pull_request'
+        id: image_meta
+        run: |
+          IMAGE_NAME=$(docker load < result 2>&1 | grep "Loaded image:" | awk '{print $NF}')
+          echo "local_image=${IMAGE_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Tag and Push Image
+        if: github.event_name != 'pull_request'
+        run: |
+          TARGET_IMAGE="ghcr.io/${{ github.repository }}"
+          docker tag "${{ steps.image_meta.outputs.local_image }}" "${TARGET_IMAGE}:latest"
+          docker tag "${{ steps.image_meta.outputs.local_image }}" "${TARGET_IMAGE}:${{ github.sha }}"
+          docker push "${TARGET_IMAGE}:latest"
+          docker push "${TARGET_IMAGE}:${{ github.sha }}"
+
+          if [[ -n "${{ inputs.version }}" ]]; then
+            docker tag "${{ steps.image_meta.outputs.local_image }}" "${TARGET_IMAGE}:${{ inputs.version }}"
+            docker push "${TARGET_IMAGE}:${{ inputs.version }}"
+          fi
