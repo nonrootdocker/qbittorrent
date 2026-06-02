@@ -16,13 +16,21 @@
       config.allowUnfree = true;
     };
 
+    qbittorrentVersion = builtins.getEnv "QBITTORRENT_VERSION";
+    qbittorrent-final-src = if qbittorrentVersion != "" then
+      builtins.fetchTarball {
+        url = "https://github.com/qbittorrent/qBittorrent/archive/refs/tags/release-${qbittorrentVersion}.tar.gz";
+      }
+    else
+      qbittorrent-src;
+
     # ----------------------------
     # qBittorrent (headless / nox)
     # ----------------------------
     qbittorrent = pkgs.stdenv.mkDerivation {
       pname = "qbittorrent-nox";
-      version = "latest";
-      src = qbittorrent-src;
+      version = if qbittorrentVersion != "" then qbittorrentVersion else "latest";
+      src = qbittorrent-final-src;
       nativeBuildInputs = with pkgs; [
         cmake
         ninja
