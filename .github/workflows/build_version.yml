@@ -27,6 +27,7 @@ jobs:
 
       - name: Build
         run: nix build -L
+        env: QBITTORRENT_VERSION: ${{ inputs.version }}
 
       - name: Flake check
         run: nix flake check -L
