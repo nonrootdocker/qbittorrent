@@ -101,7 +101,7 @@
             pkgs.coreutils
             pkgs.tzdata
             pkgs.cacert
-            pkgs.ffmpeg-headless # Headless ffmpeg/ffprobe
+            pkgs.ffmpeg-headless
             pkgs.unrar
             pkgs.p7zip
 
