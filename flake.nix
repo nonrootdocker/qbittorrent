@@ -6,6 +6,7 @@
     libtorrent-src = {
       url = "github:arvidn/libtorrent";
       flake = false;
+      submodules = true;
     };
     qbittorrent-src = {
       url = "github:qbittorrent/qBittorrent";
