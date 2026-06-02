@@ -14,7 +14,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env: QBITTORRENT_VERSION: ${{ inputs.version }}
+    env: 
+      QBITTORRENT_VERSION: ${{ inputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
