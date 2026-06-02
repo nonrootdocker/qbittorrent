@@ -28,7 +28,9 @@
         ninja
         pkg-config
         qt6.qttools
+        qt6.wrapQtAppsHook
       ];
+      dontWrapQtApps = true;
       buildInputs = with pkgs; [
         boost
         libtorrent-rasterbar-2_0_x
@@ -45,7 +47,6 @@
         "-DSTACKTRACE=OFF"
       ];
     };
-
     # ----------------------------
     # User database (/etc/passwd)
     # ----------------------------
