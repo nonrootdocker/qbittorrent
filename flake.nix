@@ -6,13 +6,13 @@
     libtorrent-src = {
       url = "github:arvidn/libtorrent";
       flake = false;
+      self.submodules = true;
     };
     qbittorrent-src = {
       url = "github:qbittorrent/qBittorrent";
       flake = false;
     };
   };
-  inputs.libtorrent-src.self.submodules = true;
 
   outputs = { self, nixpkgs, minimalbase, libtorrent-src, qbittorrent-src }:
   let
