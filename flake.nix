@@ -1,8 +1,8 @@
 {
-  description = "minimalbase-ng + qbittorrent service";
+  description = "minimalbase + qbittorrent service";
   inputs = {
     nixpkgs.follows = "minimalbase/nixpkgs";
-    minimalbase.url = "github:nonrootdocker/minimalbase-ng";
+    minimalbase.url = "github:nonrootdocker/minimalbase";
     qbittorrent-src = {
       url = "github:qbittorrent/qBittorrent";
       flake = false;
