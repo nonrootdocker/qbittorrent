@@ -3,47 +3,17 @@
   inputs = {
     nixpkgs.follows = "minimalbase/nixpkgs";
     minimalbase.url = "github:nonrootdocker/minimalbase-ng";
-    libtorrent-src = {
-      url = "github:arvidn/libtorrent";
-      flake = false;
-      self.submodules = true;
-    };
     qbittorrent-src = {
       url = "github:qbittorrent/qBittorrent";
       flake = false;
     };
   };
-
-  outputs = { self, nixpkgs, minimalbase, libtorrent-src, qbittorrent-src }:
+  outputs = { self, nixpkgs, minimalbase, qbittorrent-src }:
   let
     system = "x86_64-linux";
     pkgs = import nixpkgs {
       inherit system;
       config.allowUnfree = true;
-    };
-
-    # ----------------------------
-    # Libtorrent
-    # ----------------------------
-    libtorrent = pkgs.stdenv.mkDerivation {
-      pname = "libtorrent-rasterbar";
-      version = "latest";
-      src = libtorrent-src;
-      nativeBuildInputs = with pkgs; [
-        cmake
-        ninja
-        pkg-config
-      ];
-      buildInputs = with pkgs; [
-        boost.dev
-        openssl
-        zlib
-      ];
-      cmakeFlags = [
-        "-DCMAKE_BUILD_TYPE=Release"
-        "-DCMAKE_CXX_STANDARD=20"
-        "-DCMAKE_INSTALL_LIBDIR=lib"
-      ];
     };
 
     # ----------------------------
@@ -57,20 +27,22 @@
         cmake
         ninja
         pkg-config
-        qt6.qttools 
+        qt6.qttools
       ];
       buildInputs = with pkgs; [
-        boost.dev
+        boost
+        libtorrent-rasterbar-2_0_x
         openssl
         qt6.qtbase
         icu
         zlib
-        libtorrent
       ];
       cmakeFlags = [
         "-DCMAKE_BUILD_TYPE=Release"
         "-DCMAKE_CXX_STANDARD=20"
         "-DGUI=OFF"
+        "-DWEBUI=ON"
+        "-DSTACKTRACE=OFF"
       ];
     };
 
@@ -100,34 +72,4 @@
   in {
     packages.${system} = {
       default = self.packages.${system}.qbittorrent-image;
-      qbittorrent-image = pkgs.dockerTools.buildImage {
-        name = "minimalbase-qbittorrent";
-        tag = "latest";
-        fromImage = minimalbase.packages.${system}.base-image;
-        copyToRoot = pkgs.buildEnv {
-          name = "root";
-          paths = [
-            pkgs.coreutils
-            pkgs.tzdata
-            pkgs.cacert
-            pkgs.openssl
-            pkgs.qt6.qtbase
-            libtorrent
-            qbittorrent
-            qbittorrentAbi
-            passwdFile
-          ];
-        };
-        config = {
-          Entrypoint = [ "${minimalbase.packages.${system}.container-init}/bin/container-init" ];
-          User = "1000:1000";
-          Env = [
-            "PATH=/bin"
-            "TZ=UTC"
-            "LANG=en_US.UTF-8"
-          ];
-        };
-      };
-    };
-  };
-}
+      qb
