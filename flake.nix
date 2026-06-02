@@ -6,18 +6,15 @@
     libtorrent-src = {
       url = "github:arvidn/libtorrent";
       flake = false;
-      submodules = true;
-    };
-    try-signal-src = {
-      url = "github:arvidn/try_signal";
-      flake = false;
     };
     qbittorrent-src = {
       url = "github:qbittorrent/qBittorrent";
       flake = false;
     };
   };
-  outputs = { self, nixpkgs, minimalbase, libtorrent-src, try-signal-src, qbittorrent-src }:
+  inputs.libtorrent-src.self.submodules = true;
+
+  outputs = { self, nixpkgs, minimalbase, libtorrent-src, qbittorrent-src }:
   let
     system = "x86_64-linux";
     pkgs = import nixpkgs {
@@ -32,10 +29,6 @@
       pname = "libtorrent-rasterbar";
       version = "latest";
       src = libtorrent-src;
-      postUnpack = ''
-        rmdir $sourceRoot/deps/try_signal
-        ln -s ${try-signal-src} $sourceRoot/deps/try_signal
-      '';
       nativeBuildInputs = with pkgs; [
         cmake
         ninja
