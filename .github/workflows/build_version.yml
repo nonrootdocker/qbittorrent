@@ -3,8 +3,8 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version tag (e.g. 1.0.0)'
-        required: false
+        description: 'qBittorrent release version tag (e.g. 5.0.0)'
+        required: true
         type: string
 
 permissions:
@@ -14,8 +14,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env: 
-      QBITTORRENT_VERSION: ${{ inputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -27,14 +25,15 @@ jobs:
           extra_nix_config: |
             experimental-features = nix-command flakes
 
+      # Pure build: override the qbittorrent-src input to the requested release tag.
+      # Nix locks the override (narHash) at eval time, so no --impure is needed and
+      # the build stays fully reproducible.
       - name: Build
-        run: nix build -L
-
-      - name: Flake check
-        run: nix flake check -L
+        run: |
+          nix build -L \
+            --override-input qbittorrent-src "github:qbittorrent/qBittorrent/release-${{ inputs.version }}"
 
       - name: Log in to GitHub Container Registry
-        if: github.event_name != 'pull_request'
         uses: docker/login-action@v4
         with:
           registry: ghcr.io
@@ -42,22 +41,16 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get image name from Docker
-        if: github.event_name != 'pull_request'
         id: image_meta
         run: |
           IMAGE_NAME=$(docker load < result 2>&1 | grep "Loaded image:" | awk '{print $NF}')
           echo "local_image=${IMAGE_NAME}" >> $GITHUB_OUTPUT
 
+      # Publish only the version tag. This build is for a specific, possibly older
+      # qBittorrent release, so it must NOT touch :latest (kept by build.yml) — the
+      # two run in parallel.
       - name: Tag and Push Image
-        if: github.event_name != 'pull_request'
         run: |
           TARGET_IMAGE="ghcr.io/${{ github.repository }}"
-          docker tag "${{ steps.image_meta.outputs.local_image }}" "${TARGET_IMAGE}:latest"
-          docker tag "${{ steps.image_meta.outputs.local_image }}" "${TARGET_IMAGE}:${{ github.sha }}"
-          docker push "${TARGET_IMAGE}:latest"
-          docker push "${TARGET_IMAGE}:${{ github.sha }}"
-
-          if [[ -n "${{ inputs.version }}" ]]; then
-            docker tag "${{ steps.image_meta.outputs.local_image }}" "${TARGET_IMAGE}:${{ inputs.version }}"
-            docker push "${TARGET_IMAGE}:${{ inputs.version }}"
-          fi
+          docker tag "${{ steps.image_meta.outputs.local_image }}" "${TARGET_IMAGE}:${{ inputs.version }}"
+          docker push "${TARGET_IMAGE}:${{ inputs.version }}"

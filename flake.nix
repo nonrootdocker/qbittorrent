@@ -15,22 +15,30 @@
       inherit system;
       config.allowUnfree = true;
     };
+    inherit (pkgs) lib;
 
-    qbittorrentVersion = builtins.getEnv "QBITTORRENT_VERSION";
-    qbittorrent-final-src = if qbittorrentVersion != "" then
-      builtins.fetchTarball {
-        url = "https://github.com/qbittorrent/qBittorrent/archive/refs/tags/release-${qbittorrentVersion}.tar.gz";
-      }
-    else
-      qbittorrent-src;
+    # Which qBittorrent release to build is selected purely by overriding the
+    # `qbittorrent-src` input, e.g.:
+    #   nix build --override-input qbittorrent-src github:qbittorrent/qBittorrent/release-5.0.0
+    # No env vars / impure fetches: the override is locked (narHash) at eval time.
+    # The version string is read straight from the source so it always matches.
+    qbittorrentVersion = let
+      header = builtins.readFile "${qbittorrent-src}/src/base/version.h.in";
+      lines = lib.splitString "\n" header;
+      field = name:
+        let line = lib.findFirst (l: lib.hasPrefix "#define ${name} " l) null lines;
+        in if line == null then null else lib.removePrefix "#define ${name} " line;
+      major = field "QBT_VERSION_MAJOR";
+    in if major == null then "git"
+       else "${major}.${field "QBT_VERSION_MINOR"}.${field "QBT_VERSION_BUGFIX"}";
 
     # ----------------------------
     # qBittorrent (headless / nox)
     # ----------------------------
     qbittorrent = pkgs.stdenv.mkDerivation {
       pname = "qbittorrent-nox";
-      version = if qbittorrentVersion != "" then qbittorrentVersion else "latest";
-      src = qbittorrent-final-src;
+      version = qbittorrentVersion;
+      src = qbittorrent-src;
       nativeBuildInputs = with pkgs; [
         cmake
         ninja
