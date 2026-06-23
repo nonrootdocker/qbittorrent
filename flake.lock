@@ -36,11 +36,11 @@
     "qbittorrent-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1781678284,
-        "narHash": "sha256-ge7XjdLyOyTERWkuMSU+DtYmFk/gus7CGjgSa46SObU=",
+        "lastModified": 1782204395,
+        "narHash": "sha256-EGRGAWG0bzj9sSO9iZlw0Ws0qNS6MlBogxpnLHDD2og=",
         "owner": "qbittorrent",
         "repo": "qBittorrent",
-        "rev": "518dbf058a3fdc36fbe0eab2f18f80860e8186f2",
+        "rev": "cf39ff4881e7e450c67fda055294ae8644b34d81",
         "type": "github"
       },
       "original": {
