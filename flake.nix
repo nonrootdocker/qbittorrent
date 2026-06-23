@@ -89,8 +89,11 @@
   in {
     packages.${system} = {
       default = self.packages.${system}.qbittorrent-image;
+      # Authoritative version, read from the source's own version.h.in.
+      # Exposed for CI tagging; matches whatever qbittorrent-src is locked/overridden to.
+      version = pkgs.writeText "qbittorrent-version" qbittorrentVersion;
       qbittorrent-image = pkgs.dockerTools.buildImage {
-        name = "minimalbase-qbittorrent";
+        name = "qbittorrent";
         tag = "latest";
         fromImage = minimalbase.packages.${system}.base-image;
         copyToRoot = pkgs.buildEnv {
